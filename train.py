@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
 from src.prepare_data import get_data_loaders
-from models.model import CIFAR10CNN
+from models.modelV2 import CIFAR10CNNV2
 
 #1. Настраиваем устройство и гиперпараметры
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -18,7 +18,7 @@ train_loader, test_loader = get_data_loaders(batch_size=batch_size)
 
 #3.Функция потерь, модель, оптимизатор
 
-model = CIFAR10CNN().to(device)
+model = CIFAR10CNNV2().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=lr)
 
@@ -61,6 +61,6 @@ for epoch in range(epochs):
 
 #6.Сохранение весов модели
 os.makedirs("weights", exist_ok=True)
-torch.save(model.state_dict(), "weights/cifar10_silu.pth")
+torch.save(model.state_dict(), "weights/cifar10_siluV2.pth")
 
 writer.close()
