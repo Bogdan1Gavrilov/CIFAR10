@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import OneCycleLR
+
 
 from src.prepare_data import get_data_loaders
 from models.modelV2 import CIFAR10CNNV2
@@ -20,7 +22,16 @@ train_loader, test_loader = get_data_loaders(batch_size=batch_size)
 
 model = CIFAR10CNNV2().to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=lr)
+optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+steps_per_epoch = len(train_loader)
+scheduler = OneCycleLR(
+    optimizer,
+    max_lr=1e-3,
+    epochs=epochs,
+    steps_per_epoch = steps_per_epoch,
+    pct_start=0.3,
+    div_factor=25.0,
+    final_div_factor=1e4)
 
 #4. Логгер
 writer = SummaryWriter(log_dir="runs/cifar10_exp")
@@ -45,6 +56,7 @@ for epoch in range(epochs):
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
+        scheduler.step()
 
         #Статистика
         running_loss += loss.item()
@@ -58,9 +70,13 @@ for epoch in range(epochs):
     print(f"Epoch [{epoch+1}/{epochs}] Loss: {epoch_loss:.4f} | Accuracy: {epoch_acc:.2f}%")
     writer.add_scalar("Loss/train", epoch_loss, epoch)
     writer.add_scalar("Accuracy/train", epoch_acc, epoch)
+    for param_group in optimizer.param_groups:
+        current_lr = param_group['lr']
+        writer.add_scalar("LearningRate", current_lr, epoch)
+
 
 #6.Сохранение весов модели
 os.makedirs("weights", exist_ok=True)
-torch.save(model.state_dict(), "weights/cifar10_siluV2.pth")
+torch.save(model.state_dict(), "weights/cifar10_siluV2sch.pth")
 
 writer.close()
