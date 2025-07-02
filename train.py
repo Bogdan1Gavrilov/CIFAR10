@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import OneCycleLR
 
 
 from src.prepare_data import get_data_loaders
-from models.modelV2 import CIFAR10CNNV2
+from models.ResModelV1 import ResNetV1
 
 #1. Настраиваем устройство и гиперпараметры
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -20,7 +20,7 @@ train_loader, test_loader = get_data_loaders(batch_size=batch_size)
 
 #3.Функция потерь, модель, оптимизатор
 
-model = CIFAR10CNNV2().to(device)
+model = ResNetV1().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
 steps_per_epoch = len(train_loader)
@@ -34,7 +34,7 @@ scheduler = OneCycleLR(
     final_div_factor=1e4)
 
 #4. Логгер
-writer = SummaryWriter(log_dir="runs/cifar10_exp")
+writer = SummaryWriter(log_dir="runs/cifar10_exp_res")
 
 #5. Цикл обучения
 for epoch in range(epochs):
@@ -77,6 +77,6 @@ for epoch in range(epochs):
 
 #6.Сохранение весов модели
 os.makedirs("weights", exist_ok=True)
-torch.save(model.state_dict(), "weights/cifar10_siluV2sch.pth")
+torch.save(model.state_dict(), "weights/cifar10_resnetV1.pth")
 
 writer.close()
