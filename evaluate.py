@@ -30,9 +30,9 @@ def evaluate(model, device, test_loader, classes):
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes)
     plt.xlabel("Предсказание")
     plt.ylabel("Реальность")
-    plt.title("Матрица ошибок модель2")
+    plt.title("Матрица ошибок модель2 с настройщиком")
     plt.tight_layout()
-    plt.savefig('runs/confusion_matrixV2.png')
+    plt.savefig('runs/confusion_matrixV2sch.png')
     plt.show()
 
 def main():
@@ -40,7 +40,7 @@ def main():
     train_loader, test_loader = get_data_loaders()
     classes = train_loader.dataset.classes
     model = CIFAR10CNNV2()
-    model.load_state_dict(torch.load('weights/cifar10_siluV2.pth', map_location=device))
+    model.load_state_dict(torch.load('weights/cifar10_siluV2sch.pth', map_location=device))
     model.to(device)
 
     evaluate(model, device, test_loader, classes)
