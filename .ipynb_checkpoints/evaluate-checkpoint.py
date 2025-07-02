@@ -4,7 +4,7 @@ import numpy as np
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, accuracy_score
 
-from models.model import CIFAR10CNN 
+from models.modelV2 import CIFAR10CNNV2 
 from src.prepare_data import get_data_loaders
 
 
@@ -39,8 +39,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader, test_loader = get_data_loaders()
     classes = train_loader.dataset.classes
-    model = CIFAR10CNN()
-    model.load_state_dict(torch.load('weights/cifar10_silu.pth', map_location=device))
+    model = CIFAR10CNNV2()
+    model.load_state_dict(torch.load('weights/cifar10_siluV2.pth', map_location=device))
     model.to(device)
 
     evaluate(model, device, test_loader, classes)
