@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import OneCycleLR
 
 
 from src.prepare_data import get_data_loaders
-from models.modelV2 import CIFAR10CNNV2
+from models.ResModelV1 import ResNetV1
 
 #1. Настраиваем устройство и гиперпараметры
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -34,7 +34,7 @@ scheduler = OneCycleLR(
     final_div_factor=1e4)
 
 #4. Логгер
-writer = SummaryWriter(log_dir="runs/cifar10_exp")
+writer = SummaryWriter(log_dir="runs/cifar10_exp_res")
 
 #5. Цикл обучения
 for epoch in range(epochs):
@@ -77,6 +77,6 @@ for epoch in range(epochs):
 
 #6.Сохранение весов модели
 os.makedirs("weights", exist_ok=True)
-torch.save(model.state_dict(), "weights/cifar10_siluV2sch.pth")
+torch.save(model.state_dict(), "weights/cifar10_resnetV1.pth")
 
 writer.close()
