@@ -4,14 +4,15 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import OneCycleLR
-
+from src.mixup import mixup_data
 
 from src.prepare_data import get_data_loaders
 from models.ResModelV2 import ResNetV2
 
+
 #1. Настраиваем устройство и гиперпараметры
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-epochs = 12
+epochs = 25
 lr = 0.001
 batch_size = 64
 
@@ -34,7 +35,7 @@ scheduler = OneCycleLR(
     final_div_factor=1e4)
 
 #4. Логгер
-writer = SummaryWriter(log_dir="runs/cifar10_exp_res2")
+writer = SummaryWriter(log_dir="runs/cifar10_exp_deep24")
 
 #5. Цикл обучения
 for epoch in range(epochs):
@@ -46,6 +47,9 @@ for epoch in range(epochs):
     for images, labels in train_loader:
         images, labels = images.to(device), labels.to(device)
 
+        # Mixup аугментация
+        images, targets_a, targets_b, lam = mixup_data(images, labels, alpha=0.4)
+
         #Обнуляем градиенты
         optimizer.zero_grad()
 
@@ -53,7 +57,9 @@ for epoch in range(epochs):
         outputs = model(images)
 
         #Потери и градиенты
-        loss = criterion(outputs, labels)
+        # Используем модифицированную функцию потерь для миксапа:
+        loss = lam * criterion(outputs, targets_a) + (1 - lam) * criterion(outputs, targets_b)
+        
         loss.backward()
         optimizer.step()
         scheduler.step()
@@ -77,6 +83,6 @@ for epoch in range(epochs):
 
 #6.Сохранение весов модели
 os.makedirs("weights", exist_ok=True)
-torch.save(model.state_dict(), "weights/cifar10_resnetV2.pth")
+torch.save(model.state_dict(), "weights/cifar10_resnetV1_1.pth")
 
 writer.close()

@@ -1,4 +1,5 @@
 import torch.nn as nn
+from src.SEBlock import SEblock
 
 class Resblock(nn.Module):
     def __init__(self, channels):
@@ -6,11 +7,14 @@ class Resblock(nn.Module):
         self.block = nn.Sequential(
             nn.Conv2d(channels, channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(channels),
-            nn.SiLU(),
+            nn.Mish(),
             nn.Conv2d(channels, channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(channels)
         )
         self.act = nn.SiLU()
+        self.se = SEblock(channels)
 
     def forward(self, x):
-        return self.act(x + self.block(x))
+        out = self.block(x)
+        out = self.se(out)
+        return self.act(x + out)

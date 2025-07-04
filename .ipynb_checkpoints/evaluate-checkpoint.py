@@ -30,16 +30,16 @@ def evaluate(model, device, test_loader, classes):
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes)
     plt.xlabel("Предсказание")
     plt.ylabel("Реальность")
-    plt.title("Матрица ошибок модель1 с resblock")
+    plt.title("Матрица ошибок модель1")
     plt.tight_layout()
-    plt.savefig('runs/confusion_resnetV1.png')
+    plt.savefig('runs/confusion_resnetV1_1.png')
     plt.show()
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader, test_loader = get_data_loaders()
     classes = train_loader.dataset.classes
-    model = ResNetV1()
+    model = ResNetV2()
     model.load_state_dict(torch.load('weights/cifar10_resnetV1.pth', map_location=device))
     model.to(device)
 
