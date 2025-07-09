@@ -4,7 +4,7 @@ import numpy as np
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, accuracy_score
 
-from models.ResModelV1 import ResNetV1
+from models.ResModelV3 import ResNetV3
 from src.prepare_data import get_data_loaders
 
 
@@ -30,17 +30,17 @@ def evaluate(model, device, test_loader, classes):
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes)
     plt.xlabel("Предсказание")
     plt.ylabel("Реальность")
-    plt.title("Матрица ошибок модель1")
+    plt.title("Матрица ошибок модель3")
     plt.tight_layout()
-    plt.savefig('runs/confusion_resnetV1_1.png')
+    plt.savefig('runs/confusion_resnetV3.png')
     plt.show()
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader, test_loader = get_data_loaders()
     classes = train_loader.dataset.classes
-    model = ResNetV2()
-    model.load_state_dict(torch.load('weights/cifar10_resnetV1.pth', map_location=device))
+    model = ResNetV3()
+    model.load_state_dict(torch.load('weights/cifar10_res50netV31.pth', map_location=device))
     model.to(device)
 
     evaluate(model, device, test_loader, classes)

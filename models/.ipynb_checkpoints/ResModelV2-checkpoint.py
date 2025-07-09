@@ -16,9 +16,9 @@ class ResNetV2(nn.Module):
             nn.Conv2d(3, 32, 3, padding=1),
             nn.BatchNorm2d(32),
             self.act,
-            StochasticBlock(Resblock(32), 0.2),
-            StochasticBlock(Resblock(32), 0.2),
-            StochasticBlock(Resblock(32), 0.2),
+            Resblock(32),
+            Resblock(32),
+            Resblock(32),
             nn.MaxPool2d(2, 2)
         )
 
@@ -26,9 +26,9 @@ class ResNetV2(nn.Module):
             nn.Conv2d(32, 64, 3, padding=1),
             nn.BatchNorm2d(64),
             self.act,
-            StochasticBlock(Resblock(64), 0.2),
-            StochasticBlock(Resblock(64), 0.2),
-            StochasticBlock(Resblock(64), 0.2),
+            Resblock(64),
+            Resblock(64),
+            Resblock(64),
             nn.MaxPool2d(2, 2)
         )
 
@@ -36,9 +36,9 @@ class ResNetV2(nn.Module):
             nn.Conv2d(64, 128, 3, padding=1),
             nn.BatchNorm2d(128),
             self.act,
-            StochasticBlock(Resblock(128), 0.2),
-            StochasticBlock(Resblock(128), 0.2),
-            StochasticBlock(Resblock(128), 0.2),
+            Resblock(128),
+            Resblock(128),
+            Resblock(128),
             nn.MaxPool2d(2, 2)
         )
 
@@ -46,9 +46,9 @@ class ResNetV2(nn.Module):
             nn.Conv2d(128, 256, 3, padding=1),
             nn.BatchNorm2d(256),
             self.act,
-            StochasticBlock(Resblock(256), 0.2),
-            StochasticBlock(Resblock(256), 0.2),
-            StochasticBlock(Resblock(256), 0.2),
+            Resblock(256),
+            Resblock(256),
+            Resblock(256),
         )
         self.fc = nn.Sequential(
             nn.Linear(256 * 4 * 4, 256),

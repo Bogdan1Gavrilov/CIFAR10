@@ -3,39 +3,44 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
-from torch.optim.lr_scheduler import OneCycleLR
+from src.CosineWarmupSCH import CosineAnnWarmupRestart
 from src.mixup import mixup_data
+from src.EMAmodel import EMA
+from adan_pytorch import Adan
 
 from src.prepare_data import get_data_loaders
-from models.ResModelV2 import ResNetV2
+from models.ResModelV3 import ResNetV3
 
 
 #1. Настраиваем устройство и гиперпараметры
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-epochs = 25
+epochs = 50
 lr = 0.001
 batch_size = 64
 
 #2.Даталоадер
 train_loader, test_loader = get_data_loaders(batch_size=batch_size)
 
-#3.Функция потерь, модель, оптимизатор
+#3.Функция потерь, модель, оптимизатор, EMA-model
 
-model = ResNetV2().to(device)
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+model = ResNetV3().to(device)
+ema = EMA(model, decay=0.998)
+criterion = nn.CrossEntropyLoss(label_smoothing=0.1) #Добавил 10% сглаживание меток
+optimizer = Adan(model.parameters(), lr=lr, weight_decay=1e-6)
 steps_per_epoch = len(train_loader)
-scheduler = OneCycleLR(
+scheduler = CosineAnnWarmupRestart(
     optimizer,
-    max_lr=1e-3,
-    epochs=epochs,
-    steps_per_epoch = steps_per_epoch,
-    pct_start=0.3,
-    div_factor=25.0,
-    final_div_factor=1e4)
+    first_cycle_steps=10 * len(train_loader),  # 10 эпох первый цикл
+    cycle_mult=2,#Коэфф возрастания длины цикла
+    max_lr=0.001,#максимальный lr
+    min_lr=1e-6,#минимальный lr к которому стремится модель
+    warmup_steps=2 * len(train_loader),       # 2 эпохи разогрева
+    gamma=0.9#Коэффициент затухания max_lr
+)
+
 
 #4. Логгер
-writer = SummaryWriter(log_dir="runs/cifar10_exp_deep24")
+writer = SummaryWriter(log_dir="runs/cifar10_exp_3")
 
 #5. Цикл обучения
 for epoch in range(epochs):
@@ -54,8 +59,8 @@ for epoch in range(epochs):
         optimizer.zero_grad()
 
         #Прямой проход
-        outputs = model(images)
-
+        outputs = model(images.to(device))
+        
         #Потери и градиенты
         # Используем модифицированную функцию потерь для миксапа:
         loss = lam * criterion(outputs, targets_a) + (1 - lam) * criterion(outputs, targets_b)
@@ -63,7 +68,8 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
         scheduler.step()
-
+        ema.update()
+        
         #Статистика
         running_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -82,7 +88,9 @@ for epoch in range(epochs):
 
 
 #6.Сохранение весов модели
+print("Применяем EMA веса для финального сохранения...")
+ema.apply_shadow()
 os.makedirs("weights", exist_ok=True)
-torch.save(model.state_dict(), "weights/cifar10_resnetV1_1.pth")
+torch.save(model.state_dict(), "weights/cifar10_res50netV31.pth")
 
 writer.close()
